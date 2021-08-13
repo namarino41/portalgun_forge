@@ -1,0 +1,33 @@
+{
+  "portal1_shoot": {
+    "subtitle": "subtitles.portalgun_forge.portal1_shoot",
+
+    "sounds": [
+      "portalgun_forge:portal1_shoot"
+    ]
+  },
+  "portal2_shoot": {
+    "subtitle": "subtitles.portalgun_forge.portal2_shoot",
+
+    "sounds": [
+      "portalgun_forge:portal2_shoot"
+    ]
+  },
+  "portal_open": {
+    "subtitle": "subtitles.portalgun_forge.portal_open",
+
+    "sounds": [
+      "portalgun_forge:portal_open1",
+      "portalgun_forge:portal_open2",
+      "portalgun_forge:portal_open3"
+    ]
+  },
+  "portal_close": {
+    "subtitle": "subtitles.portalgun.portal_close",
+
+    "sounds": [
+      "portalgun_forge:portal_close1",
+      "portalgun_forge:portal_close2"
+    ]
+  }
+}
