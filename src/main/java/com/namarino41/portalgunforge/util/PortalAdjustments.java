@@ -1,6 +1,10 @@
 package com.namarino41.portalgunforge.util;
 
+import net.minecraft.util.Direction;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.Tuple3d;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Enums to properly adjust position and rotation of portals. These are based on
@@ -80,5 +84,9 @@ public enum PortalAdjustments {
 
     public double getBodyRotationAngle2() {
         return bodyRotationAngle2;
+    }
+
+    public static PortalAdjustments valueOf(Direction blockFace, Direction playerFacing) {
+        return valueOf(String.format("%s_%s", blockFace.name(), playerFacing.name()));
     }
 }

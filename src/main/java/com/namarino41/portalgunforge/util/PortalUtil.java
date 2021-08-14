@@ -2,10 +2,7 @@ package com.namarino41.portalgunforge.util;
 
 import com.namarino41.portalgunforge.entities.Portal;
 import com.namarino41.portalgunforge.entities.PortalContext;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
@@ -48,7 +45,7 @@ public class PortalUtil {
         System.out.println("Portal1 context:" + portal1.getPortalContext().getBlockRayTraceResult().getFace() + " " + portal1.getPortalContext().getPlayerFacing());
         System.out.println("Portal2 context:" + portal2.getPortalContext().getBlockRayTraceResult().getFace() + " " + portal2.getPortalContext().getPlayerFacing());
 
-        rotateAndPositionPortal(portal2);
+        rotateAndPositionPortal(portal1, portal2);
 //        rotateAndPositionPortal(portal1);
 
         return new Tuple<>(portal1, portal2);
@@ -90,16 +87,13 @@ public class PortalUtil {
                           portalContext);
     }
 
-    private void rotateAndPositionPortal(Portal portal) {
-        Direction blockFace = portal.getPortalContext().getBlockRayTraceResult().getFace();
-        Direction playerFacing = portal.getPortalContext().getPlayerFacing();
-        PortalAdjustments portalAdjustments = PortalAdjustments.valueOf(
-                String.format("%s_%s", blockFace.name(), playerFacing.name()));
+    private void rotateAndPositionPortal(Portal portal1, Portal portal2) {
+        Direction portal2BlockFace = portal2.getPortalContext().getBlockRayTraceResult().getFace();
+        Direction portal2PlayerFacing = portal2.getPortalContext().getPlayerFacing();
+        PortalAdjustments portalAdjustments = PortalAdjustments.valueOf(portal2BlockFace, portal2PlayerFacing);
 
-        System.out.println(portalAdjustments.name());
-
-        portalCommands.setPortalPosition(portal.getId(), portal.getPosition(), portalAdjustments);
-        portalCommands.rotatePortalBody(portal.getId(), portalAdjustments);
+        portalCommands.setPortalPosition(portal2.getId(), portal2.getPosition(), portalAdjustments);
+        portalCommands.rotatePortalBody(portal2.getId(), portalAdjustments);
     }
 
     private Tuple3d getPortalPosFromRayTrace(PortalContext portalContext) {
