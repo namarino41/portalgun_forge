@@ -1,9 +1,8 @@
 package com.namarino41.portalgunforge.util;
 
-import net.minecraft.client.Minecraft;
+import com.namarino41.portalgunforge.entities.Portal;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Tuple3d;
 
 
@@ -18,23 +17,27 @@ public class PortalCommands {
             "run portal set_portal_custom_name \"%s\"";
     private static final String MAKE_PORTAL_ROUND = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
             "run portal make_portal_round";
-    private static final String COMPLETE_BI_WAY_PORTAL = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
-            "run portal complete_bi_way_portal";
+    private static final String TOGGLE_PORTAL_TELEPORTABLE = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
+            "run portal set_portal_nbt {teleportable:%s}";
+    private static final String ADJUST_POSITION_AFTER_TELEPORT = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
+            "run portal set_portal_nbt {adjustPositionAfterTeleport:true}";
     private static final String SET_PORTAL_POSITION = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
             "run portal set_portal_position minecraft:overworld %f %f %f";
     private static final String ROTATE_PORTAL_BODY = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
             "run portal rotate_portal_body_along %s %f";
+    private static final String LINK_PORTAL_TO_PORTAL = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
+            "run portal set_portal_destination_to @e[limit=1,type=immersive_portals:portal,name=\"%s\"]";
     private static final String ROTATE_PORTAL_ROTATION = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
-            "run portal rotate_portal_rotation_along y 180";
+            "run portal rotate_portal_rotation_along %s %d";
 
     public PortalCommands(CommandSource commandSource, Commands commandManager) {
         this.commandSource = commandSource;
         this.commandManager = commandManager;
     }
 
-    public void makePortal(Tuple3d destination) {
+    public void makePortal() {
         commandManager.handleCommand(commandSource,
-                String.format(MAKE_PORTAL, destination.x, destination.y, destination.z));
+                String.format(MAKE_PORTAL, 0.0, -100.0, 0.0));
     }
 
     public void deletePortal(String tag) {
@@ -46,33 +49,49 @@ public class PortalCommands {
                 String.format(TAG_PORTAL, portalPosition.x, portalPosition.y, portalPosition.z, tag));
     }
 
-    public void completeBiWayPortal(String tag) {
-        commandManager.handleCommand(commandSource, String.format(COMPLETE_BI_WAY_PORTAL, tag));
+    public void makePortalRound(Portal portal) {
+        commandManager.handleCommand(commandSource, String.format(MAKE_PORTAL_ROUND, portal.getId()));
     }
 
-    public void makePortalRound(String tag) {
-        commandManager.handleCommand(commandSource, String.format(MAKE_PORTAL_ROUND, tag));
+    public void movePortal(Portal portal, PortalAdjustments portalAdjustments) {
+        commandManager.handleCommand(commandSource, String.format(SET_PORTAL_POSITION, portal.getId(),
+                portal.getPosition().x + portalAdjustments.getAdjustment().x,
+                portal.getPosition().y + portalAdjustments.getAdjustment().y,
+                portal.getPosition().z + portalAdjustments.getAdjustment().z));
     }
 
-    public void setPortalPosition(String tag, Tuple3d portalPosition, PortalAdjustments portalRotation) {
-        commandManager.handleCommand(commandSource, String.format(SET_PORTAL_POSITION, tag,
-                portalPosition.x + portalRotation.getAdjustment().x,
-                portalPosition.y + portalRotation.getAdjustment().y,
-                portalPosition.z + portalRotation.getAdjustment().z));
-    }
-
-    public void rotatePortalBody(String tag, PortalAdjustments portalRotation) {
+    public void rotatePortalBody(Portal portal, PortalAdjustments portalRotation) {
         commandManager.handleCommand(commandSource,
                 String.format(ROTATE_PORTAL_BODY,
-                        tag,
+                        portal.getId(),
                         portalRotation.getBodyRotationAxis1(),
                         portalRotation.getBodyRotationAngle1()));
         if (!portalRotation.getBodyRotationAxis2().isEmpty()) {
             commandManager.handleCommand(commandSource,
                     String.format(ROTATE_PORTAL_BODY,
-                            tag,
+                            portal.getId(),
                             portalRotation.getBodyRotationAxis2(),
                             portalRotation.getBodyRotationAngle2()));
         }
+    }
+
+    public void changePortalTeleportable(Portal portal, boolean teleportable) {
+        commandManager.handleCommand(commandSource,
+                String.format(TOGGLE_PORTAL_TELEPORTABLE, portal.getId(), teleportable));
+    }
+
+    public void linkPortalToPortal(Portal portal1, Portal portal2) {
+        commandManager.handleCommand(commandSource,
+                String.format(LINK_PORTAL_TO_PORTAL, portal1.getId(), portal2.getId()));
+    }
+
+    public void adjustPositionAfterTeleport(Portal portal) {
+        commandManager.handleCommand(commandSource,
+                String.format(ADJUST_POSITION_AFTER_TELEPORT, portal.getId()));
+    }
+
+    public void rotatePortalRotation(Portal portal, String rotationAxis, int rotationAngle) {
+        commandManager.handleCommand(commandSource,
+                String.format(ROTATE_PORTAL_ROTATION, portal.getId(), rotationAxis, rotationAngle));
     }
 }

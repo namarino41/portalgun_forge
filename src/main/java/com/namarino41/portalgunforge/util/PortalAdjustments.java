@@ -4,39 +4,61 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.Tuple3d;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Enums to properly adjust position and rotation of portals. These are based on
  * the the block face the portal was fired at and the direction the player is facing
  * (i.e. UP_NORTH: Portal was fired at the UP face of a block and the player was facing NORTH).
  */
 public enum PortalAdjustments {
+    /**
+     * Properly positions a portal that fired at the UP face of a block with the player
+     * facing NORTH, SOUTH, EAST, WEST.
+     */
     UP_NORTH(0, -.95, -.5, "x", -90, "", 0),
     UP_SOUTH(0, -.95, .5, "x", 90, "", 0),
     UP_EAST(.5, -.95, 0, "z", -90, "", 0),
     UP_WEST(-.5, -.95, 0, "z", 90, "", 0),
 
+    /**
+     * Properly positions a portal that fired at the DOWN face of a block with the player
+     * facing NORTH, SOUTH, EAST, WEST.
+     */
     DOWN_NORTH(0, .95, -.5, "x", 90, "", 0),
     DOWN_SOUTH(0, .95, .5, "x", -90, "", 0),
     DOWN_EAST(.5, .95, 0, "z", 90, "", 0),
     DOWN_WEST(-.5, .95, 0, "z", -90, "", 0),
 
+    /**
+     * Properly positions a portal that fired at the NORTH face of a block with the player
+     * facing UP, DOWN, EAST, WEST.
+     */
     NORTH_UP(0, .5, .95, "x", 90, "", 0),
     NORTH_DOWN(0, .5, .95, "x", -90, "", 0),
     NORTH_EAST(0, .5, .95, "x", -90, "y", -90),
     NORTH_WEST(0, .5, .95, "x", -90, "y", 90),
 
+    /**
+     * Properly positions a portal that fired at the SOUTH face of a block with the player
+     * facing UP, DOWN, EAST, WEST.
+     */
     SOUTH_UP(0, .5, -.95, "x", -90, "", 0),
     SOUTH_DOWN(0, .5, -.95, "x", 90, "", 0),
     SOUTH_EAST(0, .5, -.95, "x", 90, "y", 90),
     SOUTH_WEST(0, .5, -.95, "x", 90, "y", -90),
 
+    /**
+     * Properly positions a portal that fired at the EAST face of a block with the player
+     * facing UP, DOWN, NORTH, SOUTH.
+     */
     EAST_UP(-.95, .5, 0, "z", 90, "", 0),
     EAST_DOWN(-.95, .5, 0, "z", -90, "", 0),
     EAST_NORTH(-.95, .5, 0, "z", 90, "y", 90),
     EAST_SOUTH(-.95, .5, 0, "z", 90, "y", -90),
 
+    /**
+     * Properly positions a portal that fired at the WEST face of a block with the player
+     * facing UP, DOWN, NORTH, SOUTH.
+     */
     WEST_UP(.95, .5, 0, "z", 90, "", 0),
     WEST_DOWN(.95, .5, 0, "z", 90, "", 0),
     WEST_NORTH(.95, .5, 0, "z", -90, "y", -90),

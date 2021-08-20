@@ -22,8 +22,8 @@ import java.util.Comparator;
 public class PortalGunItem extends Item {
     private PortalUtil portalUtil;
 
-    private PortalContext portal1Context;
-    private PortalContext portal2Context;
+    private Portal portal1;
+    private Portal portal2;
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
@@ -59,24 +59,22 @@ public class PortalGunItem extends Item {
 
             PortalContext portalContext = new PortalContext(lookingDirection, blockRayTraceResult);
 
-            if (portal1Context == null) {
+            if (portal1 == null) {
                 // Since we can't make a portal to nowhere, for the first portal, we're simply going to
                 // store the location. Then for the second portal, we can create it with a destination
                 // of the initial position we tagged.
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_1_SHOOT_EVENT);
-                portal1Context = portalContext;
+//                portal1Context = portalContext;
+                portal1 = portalUtil.makePortal(portalContext, PortalUtil.PORTAL_1_ID);
             } else {
-                portal2Context = portalContext;
-
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_2_SHOOT_EVENT);
-                Tuple<Portal, Portal> portals =
-                        portalUtil.makePortals(portal1Context, portal2Context);
-//                portal1 = portals.getA();
-//                portal2 = portals.getB();
+                portal2 = portalUtil.makePortal(portalContext, PortalUtil.PORTAL_2_ID);
+                portalUtil.linkPortals(portal1, portal2);
+                portalUtil.adjustPortalRotation(portal1, portal2);
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_OPEN_EVENT);
 
-                portal1Context = null;
-                portal2Context = null;
+                portal1 = null;
+                portal2 = null;
             }
         }
 

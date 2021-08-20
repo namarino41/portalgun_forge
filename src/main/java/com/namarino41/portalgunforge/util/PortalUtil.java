@@ -6,16 +6,35 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Tuple3d;
 import net.minecraft.world.World;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PortalUtil {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final PortalCommands portalCommands;
 
-    private final String PORTAL_1_ID;
-    private final String PORTAL_2_ID;
+    private static final List<Direction> HORIZONTAL_DIRECTIONS = new ArrayList<>();
+    private static final List<Direction> VERTICAL_DIRECTIONS = new ArrayList<>();
+
+    static {
+        VERTICAL_DIRECTIONS.add(Direction.UP);
+        VERTICAL_DIRECTIONS.add(Direction.DOWN);
+
+        HORIZONTAL_DIRECTIONS.add(Direction.NORTH);
+        HORIZONTAL_DIRECTIONS.add(Direction.EAST);
+        HORIZONTAL_DIRECTIONS.add(Direction.SOUTH);
+        HORIZONTAL_DIRECTIONS.add(Direction.WEST);
+    }
+
+    public static String PORTAL_1_ID;
+    public static String PORTAL_2_ID;
 
     public PortalUtil(World worldIn, Entity playerIn) {
         this.portalCommands = new PortalCommands(
@@ -25,75 +44,125 @@ public class PortalUtil {
                                     .withFeedbackDisabled(),
                 worldIn.getServer().getCommandManager());
 
-        this.PORTAL_1_ID = "portal_1_" + playerIn.getUniqueID();
-        this.PORTAL_2_ID = "portal_2_" + playerIn.getUniqueID();
+        PORTAL_1_ID = "portal_1_" + playerIn.getUniqueID();
+        PORTAL_2_ID = "portal_2_" + playerIn.getUniqueID();
     }
 
-    /**
-     * Makes the portals. Because we can't create a portal to nowhere, we store the first portal's
-     * position and then make the second portal with a destination of that initial position.
-     * So basically we have to make them backwards; second portal, then first.
-     *
-     * @param from The ray trace result of first portal spot.
-     * @param to The ray trace result of the second portal spot.
-     * @return
-     */
-    public Tuple<Portal, Portal> makePortals(PortalContext from, PortalContext to) {
-        Portal portal2 = makePortal2(from, to);
-        Portal portal1 = linkPortals(portal2, from);
+    public Portal makePortal(PortalContext portalContext, String tag) {
+        Tuple3d adjustedPosition = getPortalPosFromRayTrace(portalContext);
+        Portal portal = new Portal(tag, adjustedPosition, portalContext);
 
-        System.out.println("Portal1 context:" + portal1.getPortalContext().getBlockRayTraceResult().getFace() + " " + portal1.getPortalContext().getPlayerFacing());
-        System.out.println("Portal2 context:" + portal2.getPortalContext().getBlockRayTraceResult().getFace() + " " + portal2.getPortalContext().getPlayerFacing());
+        portalCommands.makePortal();
+        portalCommands.tagPortal(adjustedPosition, tag);
+        portalCommands.makePortalRound(portal);
+        portalCommands.changePortalTeleportable(portal, false);
+        portalCommands.adjustPositionAfterTeleport(portal);
 
-        rotateAndPositionPortal(portal1, portal2);
-//        rotateAndPositionPortal(portal1);
+        positionPortal(portal);
 
-        return new Tuple<>(portal1, portal2);
+        return portal;
     }
 
-    /**
-     * Makes the second portal with a destination of the first given the two portal contexts.
-     *
-     * @param from The ray trace result of first portal spot.
-     * @param to The ray trace result of the second portal spot.
-     *
-     * @return the second portal.
-     */
-    private Portal makePortal2(PortalContext from, PortalContext to) {
-        // Get the actual positions the portals will be in.
-        Tuple3d adjustedFrom = getPortalPosFromRayTrace(from);
-        Tuple3d adjustedTo = getPortalPosFromRayTrace(to);
+    public void linkPortals(Portal portal1, Portal portal2) {
+        portalCommands.linkPortalToPortal(portal1, portal2);
+        portalCommands.linkPortalToPortal(portal2, portal1);
 
-        // Make the second portal with a destination of the first. Then, tag the portal with
-        // a custom ID. Remember, "from" is the first portal target; "to" is the second portal
-        // target. When we create a portal though, it doesn't create a corresponding linked portal
-        // automatically. That's done in "linkPortals()". Tagging requires the portal's position,
-        // so we use "to" to tag the second portal.
-        portalCommands.makePortal(adjustedFrom);
-        portalCommands.tagPortal(adjustedTo, PORTAL_2_ID);
-
-        return new Portal(PORTAL_2_ID, adjustedTo, adjustedFrom, to);
+        portalCommands.changePortalTeleportable(portal1, true);
+        portalCommands.changePortalTeleportable(portal2, true);
     }
 
-    private Portal linkPortals(Portal portal, PortalContext portalContext) {
-        portalCommands.completeBiWayPortal(PORTAL_2_ID);
-        portalCommands.tagPortal(portal.getDestination(), PORTAL_1_ID);
-        portalCommands.makePortalRound(PORTAL_1_ID);
-        portalCommands.makePortalRound(PORTAL_2_ID);
-
-        return new Portal(PORTAL_1_ID,
-                          new Tuple3d(portal.getDestination().x, portal.getDestination().y, portal.getDestination().z),
-                          new Tuple3d(portal.getPosition().x, portal.getPosition().y, portal.getPosition().z),
-                          portalContext);
-    }
-
-    private void rotateAndPositionPortal(Portal portal1, Portal portal2) {
-        Direction portal2BlockFace = portal2.getPortalContext().getBlockRayTraceResult().getFace();
-        Direction portal2PlayerFacing = portal2.getPortalContext().getPlayerFacing();
+    private void positionPortal(Portal portal) {
+        Direction portal2BlockFace = portal.getBlockFace();
+        Direction portal2PlayerFacing = portal.getPlayerFacing();
         PortalAdjustments portalAdjustments = PortalAdjustments.valueOf(portal2BlockFace, portal2PlayerFacing);
 
-        portalCommands.setPortalPosition(portal2.getId(), portal2.getPosition(), portalAdjustments);
-        portalCommands.rotatePortalBody(portal2.getId(), portalAdjustments);
+        portalCommands.movePortal(portal, portalAdjustments);
+        portalCommands.rotatePortalBody(portal, portalAdjustments);
+    }
+
+    public void adjustPortalRotation(Portal portal1, Portal portal2) {
+        Direction portal1PortalFacing = portal1.getPortalFacing();
+        Direction portal2PortalFacing = portal2.getPortalFacing();
+
+        Direction portal1PlayerFacing = portal1.getPlayerFacing();
+        Direction portal2PlayerFacing = portal2.getPlayerFacing();
+
+        if (portal1.isVertical() && portal2.isVertical()) {
+            portalCommands.rotatePortalRotation(portal1, "y", getRotation(portal1PortalFacing, portal2PortalFacing));
+            portalCommands.rotatePortalRotation(portal2, "y", getRotation(portal2PortalFacing, portal1PortalFacing));
+        } else if (portal1.isVertical() && !portal2.isVertical()) {
+            portalCommands.rotatePortalRotation(portal1,
+                                                portal1PortalFacing == Direction.NORTH ||
+                                                        portal1PortalFacing == Direction.SOUTH ? "x" : "z",
+                                                getRotation(portal1PortalFacing, portal2PortalFacing));
+            if (portal1PortalFacing != portal2PlayerFacing) {
+                portalCommands.rotatePortalRotation(portal1,
+                                                    portal1PortalFacing == Direction.NORTH ||
+                                                            portal1PortalFacing == Direction.SOUTH ? "z" : "x",
+                                                    getRotation(portal1PlayerFacing, portal2PlayerFacing));
+            }
+
+        } else if (!portal1.isVertical() && portal2.isVertical()) {
+
+
+        } else if (!portal1.isVertical() && !portal2.isVertical()) {
+
+
+        }
+    }
+
+    private int getRotation(Direction from, Direction to) {
+        if (VERTICAL_DIRECTIONS.contains(from) && VERTICAL_DIRECTIONS.contains(to)) {
+            if (from == Direction.DOWN && to == Direction.UP) {
+                return -180;
+            }
+            if (from == Direction.UP && to == Direction.DOWN) {
+                return 180;
+            }
+            if (from == to) {
+                return 0;
+            }
+        }
+
+        if (HORIZONTAL_DIRECTIONS.contains(from) && VERTICAL_DIRECTIONS.contains(to)) {
+            if (to == Direction.UP) {
+                if (from == Direction.NORTH || from == Direction.EAST) {
+                    return -90;
+                } else {
+                    return 90;
+                }
+            } else {
+                if (from == Direction.NORTH || from == Direction.EAST) {
+                    return 90;
+                } else {
+                    return -90;
+                }
+            }
+        }
+
+        if (VERTICAL_DIRECTIONS.contains(from) && HORIZONTAL_DIRECTIONS.contains(to)) {
+            if (from == Direction.UP) {
+                if (to == Direction.NORTH || to == Direction.EAST) {
+                    return 90;
+                } else {
+                    return -90;
+                }
+            } else {
+                if (to == Direction.NORTH || to == Direction.EAST) {
+                    return -90;
+                } else {
+                    return 90;
+                }
+            }
+        }
+
+        if (HORIZONTAL_DIRECTIONS.contains(from) && HORIZONTAL_DIRECTIONS.contains(to)) {
+            int fromIndex = HORIZONTAL_DIRECTIONS.indexOf(from);
+            int toIndex = HORIZONTAL_DIRECTIONS.indexOf(to);
+
+            return 90 * (toIndex - fromIndex);
+        }
+        return 0;
     }
 
     private Tuple3d getPortalPosFromRayTrace(PortalContext portalContext) {
@@ -119,7 +188,7 @@ public class PortalUtil {
 
     /**
      * Enums for the initial position of a portal. When we execute the "make_portal" command,
-     * immersive portal's  internal logic positions it a certain way based on what
+     * immersive portal's internal logic positions it a certain way based on what
      * face of a block is being targeted. These enums help find the portal once it's created.
      */
     private enum PortalPosition {
