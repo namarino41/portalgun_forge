@@ -11,13 +11,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.util.Arrays;
 import java.util.Comparator;
-
 
 public class PortalGunItem extends Item {
     private PortalUtil portalUtil;
@@ -27,6 +26,7 @@ public class PortalGunItem extends Item {
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Override
@@ -57,14 +57,14 @@ public class PortalGunItem extends Item {
                                    playerIn.getLookVec().z * dir.getZOffset()))
                     .orElse(null);
 
-            PortalContext portalContext = new PortalContext(lookingDirection, blockRayTraceResult);
+            System.out.println(lookingDirection.name());
+            PortalContext portalContext = new PortalContext(lookingDirection, playerIn.getHorizontalFacing(), blockRayTraceResult);
 
             if (portal1 == null) {
                 // Since we can't make a portal to nowhere, for the first portal, we're simply going to
                 // store the location. Then for the second portal, we can create it with a destination
                 // of the initial position we tagged.
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_1_SHOOT_EVENT);
-//                portal1Context = portalContext;
                 portal1 = portalUtil.makePortal(portalContext, PortalUtil.PORTAL_1_ID);
             } else {
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_2_SHOOT_EVENT);
@@ -72,9 +72,6 @@ public class PortalGunItem extends Item {
                 portalUtil.linkPortals(portal1, portal2);
                 portalUtil.adjustPortalRotation(portal1, portal2);
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_OPEN_EVENT);
-
-                portal1 = null;
-                portal2 = null;
             }
         }
 
@@ -82,4 +79,14 @@ public class PortalGunItem extends Item {
     }
 
 
+//    @SubscribeEvent
+//    public void onKeyPress(InputEvent.KeyInputEvent event) {
+//        if(event.getKey() == GLFW.GLFW_KEY_R) {
+//            portalUtil.deletePortal(portal1);
+//            portalUtil.deletePortal(portal2);
+//            portal1 = null;
+//            portal2 = null;
+//        }
+//
+//    }
 }

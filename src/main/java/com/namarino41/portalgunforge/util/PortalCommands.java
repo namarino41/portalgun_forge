@@ -40,8 +40,8 @@ public class PortalCommands {
                 String.format(MAKE_PORTAL, 0.0, -100.0, 0.0));
     }
 
-    public void deletePortal(String tag) {
-        commandManager.handleCommand(commandSource, String.format(DELETE_PORTAL, tag));
+    public void deletePortal(Portal portal) {
+        commandManager.handleCommand(commandSource, String.format(DELETE_PORTAL, portal.getId()));
     }
 
     public void tagPortal(Tuple3d portalPosition, String tag) {

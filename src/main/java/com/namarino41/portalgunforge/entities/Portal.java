@@ -26,11 +26,11 @@ public class Portal {
         return portalContext.getPlayerFacing();
     }
 
-    public Direction getBlockFace() {
-        return portalContext.getBlockRayTraceResult().getFace();
+    public Direction getHorizontalPlayerFacing() {
+        return portalContext.getHorizontalPlayerFacing();
     }
 
-    public Direction getPortalFacing() {
+    public Direction getBlockFace() {
         return portalContext.getBlockRayTraceResult().getFace();
     }
 
