@@ -36,6 +36,14 @@ public class PortalGunItem extends Item {
                 portalUtil = new PortalUtil(worldIn, playerIn);
             }
 
+            if (portal1 != null && portal2 != null) {
+                portalUtil.deletePortal(portal1);
+                portalUtil.deletePortal(portal2);
+
+                portal1 = null;
+                portal2 = null;
+            }
+
             RayTraceContext rayTraceContext = new RayTraceContext(
                     playerIn.getEyePosition(1.0f),
                     playerIn.getEyePosition(1.0f).add(playerIn.getLookVec().scale(100.0)),
@@ -57,7 +65,6 @@ public class PortalGunItem extends Item {
                                    playerIn.getLookVec().z * dir.getZOffset()))
                     .orElse(null);
 
-            System.out.println(lookingDirection.name());
             PortalContext portalContext = new PortalContext(lookingDirection, playerIn.getHorizontalFacing(), blockRayTraceResult);
 
             if (portal1 == null) {
@@ -72,9 +79,6 @@ public class PortalGunItem extends Item {
                 portalUtil.linkPortals(portal1, portal2);
                 portalUtil.adjustPortalRotation(portal1, portal2);
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_OPEN_EVENT);
-
-                portal1 = null;
-                portal2 = null;
             }
         }
 
