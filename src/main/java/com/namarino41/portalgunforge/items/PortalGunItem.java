@@ -26,7 +26,7 @@ public class PortalGunItem extends Item {
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
-        MinecraftForge.EVENT_BUS.register(this);
+//        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Override
@@ -72,6 +72,9 @@ public class PortalGunItem extends Item {
                 portalUtil.linkPortals(portal1, portal2);
                 portalUtil.adjustPortalRotation(portal1, portal2);
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_OPEN_EVENT);
+
+                portal1 = null;
+                portal2 = null;
             }
         }
 
