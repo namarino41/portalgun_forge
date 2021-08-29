@@ -1,12 +1,8 @@
 package com.namarino41.portalgunforge.util;
 
 import com.namarino41.portalgunforge.PortalGunForge;
-import com.namarino41.portalgunforge.entities.Portal;
 import com.namarino41.portalgunforge.items.PortalGunItem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 

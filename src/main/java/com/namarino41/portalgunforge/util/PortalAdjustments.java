@@ -1,8 +1,7 @@
 package com.namarino41.portalgunforge.util;
 
 import net.minecraft.util.Direction;
-import net.minecraft.util.Tuple;
-import net.minecraft.util.math.Tuple3d;
+import net.minecraft.util.math.vector.Vector3d;
 
 /**
  * Enums to properly adjust position and rotation of portals. These are based on
@@ -88,8 +87,8 @@ public enum PortalAdjustments {
         this.bodyRotationAngle2 = bodyRotationAngle2;
     }
 
-    public Tuple3d getAdjustment() {
-        return new Tuple3d(xAdjustment, yAdjustment, zAdjustment);
+    public Vector3d getAdjustment() {
+        return new Vector3d(xAdjustment, yAdjustment, zAdjustment);
     }
 
     public String getBodyRotationAxis1() {

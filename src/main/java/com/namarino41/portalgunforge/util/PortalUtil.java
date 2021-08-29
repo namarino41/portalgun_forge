@@ -7,7 +7,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Tuple3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,7 +49,7 @@ public class PortalUtil {
     }
 
     public Portal makePortal(PortalContext portalContext, String tag) {
-        Tuple3d adjustedPosition = getPortalPosFromRayTrace(portalContext);
+        Vector3d adjustedPosition = getPortalPosFromRayTrace(portalContext);
         Portal portal = new Portal(tag, adjustedPosition, portalContext);
 
         portalCommands.makePortal();
@@ -239,12 +239,12 @@ public class PortalUtil {
         return 0;
     }
 
-    private Tuple3d getPortalPosFromRayTrace(PortalContext portalContext) {
+    private Vector3d getPortalPosFromRayTrace(PortalContext portalContext) {
         Direction blockFace = portalContext.getBlockRayTraceResult().getFace();
         BlockPos blockPos = portalContext.getBlockRayTraceResult().getPos();
         PortalPosition portalPosition = PortalPosition.valueOf(blockFace.name());
 
-        return new Tuple3d(blockPos.getX() + portalPosition.xAdjustment,
+        return new Vector3d(blockPos.getX() + portalPosition.xAdjustment,
                            blockPos.getY() + portalPosition.yAdjustment,
                            blockPos.getZ() + portalPosition.zAdjustment);
     }

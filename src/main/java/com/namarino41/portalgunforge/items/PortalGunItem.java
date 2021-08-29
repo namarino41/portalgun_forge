@@ -11,7 +11,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
 import java.util.Arrays;

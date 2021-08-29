@@ -3,7 +3,7 @@ package com.namarino41.portalgunforge.util;
 import com.namarino41.portalgunforge.entities.Portal;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
-import net.minecraft.util.math.Tuple3d;
+import net.minecraft.util.math.vector.Vector3d;
 
 
 public class PortalCommands {
@@ -44,7 +44,7 @@ public class PortalCommands {
         commandManager.handleCommand(commandSource, String.format(DELETE_PORTAL, portal.getId()));
     }
 
-    public void tagPortal(Tuple3d portalPosition, String tag) {
+    public void tagPortal(Vector3d portalPosition, String tag) {
         commandManager.handleCommand(commandSource,
                 String.format(TAG_PORTAL, portalPosition.x, portalPosition.y, portalPosition.z, tag));
     }

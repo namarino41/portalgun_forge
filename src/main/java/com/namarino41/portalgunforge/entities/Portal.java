@@ -1,14 +1,14 @@
 package com.namarino41.portalgunforge.entities;
 
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.Tuple3d;
+import net.minecraft.util.math.vector.Vector3d;
 
 public class Portal {
     private final String id;
-    private final Tuple3d position;
+    private final Vector3d position;
     private final PortalContext portalContext;
 
-    public Portal(String id, Tuple3d position, PortalContext portalContext) {
+    public Portal(String id, Vector3d position, PortalContext portalContext) {
         this.id = id;
         this.position = position;
         this.portalContext = portalContext;
@@ -18,7 +18,7 @@ public class Portal {
         return id;
     }
 
-    public Tuple3d getPosition() {
+    public Vector3d getPosition() {
         return position;
     }
 
