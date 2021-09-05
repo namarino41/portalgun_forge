@@ -14,6 +14,5 @@ public class PortalGunItems {
 
     static {
         ITEMS.register("portalgun", () -> PORTAL_GUN_ITEM);
-
     }
 }

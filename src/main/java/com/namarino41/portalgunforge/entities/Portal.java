@@ -18,6 +18,10 @@ public class Portal {
         return id;
     }
 
+    public String getDimension() {
+        return portalContext.getDimension();
+    }
+
     public Vector3d getPosition() {
         return position;
     }

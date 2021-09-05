@@ -1,37 +1,36 @@
 package com.namarino41.portalgunforge.util;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.namarino41.portalgunforge.entities.Portal;
 import com.namarino41.portalgunforge.entities.PortalContext;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.vector.Vector2f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 public class PortalUtil {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final PortalCommands portalCommands;
 
-    private static final List<Direction> HORIZONTAL_DIRECTIONS = new ArrayList<>();
-    private static final List<Direction> VERTICAL_DIRECTIONS = new ArrayList<>();
-
-    static {
-        VERTICAL_DIRECTIONS.add(Direction.UP);
-        VERTICAL_DIRECTIONS.add(Direction.DOWN);
-
-        HORIZONTAL_DIRECTIONS.add(Direction.NORTH);
-        HORIZONTAL_DIRECTIONS.add(Direction.EAST);
-        HORIZONTAL_DIRECTIONS.add(Direction.SOUTH);
-        HORIZONTAL_DIRECTIONS.add(Direction.WEST);
-    }
+    private final ImmutableList<Direction> HORIZONTAL_DIRECTIONS =
+            ImmutableList.of(Direction.UP, Direction.DOWN);
+    private final ImmutableList<Direction> VERTICAL_DIRECTIONS =
+            ImmutableList.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
 
     public static String PORTAL_1_ID;
     public static String PORTAL_2_ID;
@@ -52,7 +51,7 @@ public class PortalUtil {
         Vector3d adjustedPosition = getPortalPosFromRayTrace(portalContext);
         Portal portal = new Portal(tag, adjustedPosition, portalContext);
 
-        portalCommands.makePortal();
+        portalCommands.makePortal(portalContext.getDimension());
         portalCommands.tagPortal(adjustedPosition, tag);
         portalCommands.makePortalRound(portal);
         portalCommands.changePortalTeleportable(portal, false);
@@ -262,6 +261,35 @@ public class PortalUtil {
 
     public void deletePortal(Portal portal) {
         portalCommands.deletePortal(portal);
+    }
+
+    public boolean isValidPosition(World worldIn,
+                                   BlockRayTraceResult blockRayTraceResult,
+                                   Direction lookingDirection) {
+
+        BlockState mainBlock = worldIn.getBlockState(blockRayTraceResult.getPos());
+        BlockState adjacentBlock;
+
+        BlockPos adjacentBlockPos;
+        if (lookingDirection == Direction.NORTH) {
+            adjacentBlockPos = blockRayTraceResult.getPos().north();
+        } else if (lookingDirection == Direction.EAST) {
+            adjacentBlockPos = blockRayTraceResult.getPos().east();
+        } else if (lookingDirection == Direction.SOUTH) {
+            adjacentBlockPos = blockRayTraceResult.getPos().south();
+        } else if (lookingDirection == Direction.WEST){
+            adjacentBlockPos = blockRayTraceResult.getPos().west();
+        } else {
+            adjacentBlockPos = blockRayTraceResult.getPos().up();
+        }
+        adjacentBlock = worldIn.getBlockState(adjacentBlockPos);
+
+        if (mainBlock.getBlock() == Blocks.SNOW || adjacentBlock.getBlock() == Blocks.SNOW) {
+            return false;
+        }
+
+        return mainBlock.isSolidSide(worldIn, blockRayTraceResult.getPos(), blockRayTraceResult.getFace()) &&
+                adjacentBlock.isSolidSide(worldIn, blockRayTraceResult.getPos(), blockRayTraceResult.getFace());
     }
 
     /**

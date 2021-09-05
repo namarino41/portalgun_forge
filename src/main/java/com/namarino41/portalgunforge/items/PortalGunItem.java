@@ -11,9 +11,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.*;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.World;
 
 import java.util.Arrays;
@@ -22,12 +21,13 @@ import java.util.Comparator;
 public class PortalGunItem extends Item {
     private PortalUtil portalUtil;
 
+    private final int MAX_RANGE = 100;
+
     private Portal portal1;
     private Portal portal2;
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
-//        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Override
@@ -53,21 +53,34 @@ public class PortalGunItem extends Item {
                     playerIn
             );
 
-            BlockRayTraceResult blockRayTraceResult = worldIn.rayTraceBlocks(rayTraceContext);
-            if (blockRayTraceResult.getType() != RayTraceResult.Type.BLOCK) {
+            BlockRayTraceResult tmpBlockRayTraceResult = worldIn.rayTraceBlocks(rayTraceContext);
+            if (tmpBlockRayTraceResult.getType() != RayTraceResult.Type.BLOCK) {
                 return ActionResult.resultFail(playerIn.getHeldItem(handIn));
             }
 
+            if (tmpBlockRayTraceResult.getPos().distanceSq(
+                    new Vector3i(playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ())) > 100) {
+                return ActionResult.resultFail(playerIn.getHeldItem(handIn));
+            }
+
+            BlockRayTraceResult blockRayTraceResult = tmpBlockRayTraceResult;
+
             Direction lookingDirection = Arrays.stream(Direction.values())
-                    .filter(d -> d.getAxis() != blockRayTraceResult.getFace().getAxis())
+                    .filter(d -> d.getAxis() != tmpBlockRayTraceResult.getFace().getAxis())
                     .max(Comparator.comparingDouble(
                             dir -> playerIn.getLookVec().x * dir.getXOffset() +
                                    playerIn.getLookVec().y * dir.getYOffset() +
                                    playerIn.getLookVec().z * dir.getZOffset()))
                     .orElse(null);
 
-            PortalContext portalContext = new PortalContext(lookingDirection, playerIn.getHorizontalFacing(), blockRayTraceResult);
+            if (!portalUtil.isValidPosition(worldIn, tmpBlockRayTraceResult, lookingDirection)) {
+                return ActionResult.resultFail(playerIn.getHeldItem(handIn));
+            }
 
+            PortalContext portalContext = new PortalContext(lookingDirection,
+                                                            playerIn.getHorizontalFacing(),
+                                                            blockRayTraceResult,
+                                                            worldIn.func_234923_W_().func_240901_a_().getPath());
             if (portal1 == null) {
                 portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_1_SHOOT_EVENT);
                 portal1 = portalUtil.makePortal(portalContext, PortalUtil.PORTAL_1_ID);
