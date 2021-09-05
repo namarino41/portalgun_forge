@@ -28,9 +28,10 @@ public class PortalUtil {
     private final PortalCommands portalCommands;
 
     private final ImmutableList<Direction> HORIZONTAL_DIRECTIONS =
-            ImmutableList.of(Direction.UP, Direction.DOWN);
-    private final ImmutableList<Direction> VERTICAL_DIRECTIONS =
             ImmutableList.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
+    private final ImmutableList<Direction> VERTICAL_DIRECTIONS =
+            ImmutableList.of(Direction.UP, Direction.DOWN);
+
 
     public static String PORTAL_1_ID;
     public static String PORTAL_2_ID;
