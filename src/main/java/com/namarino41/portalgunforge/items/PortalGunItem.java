@@ -1,9 +1,8 @@
 package com.namarino41.portalgunforge.items;
 
-import com.namarino41.portalgunforge.entities.Portal;
 import com.namarino41.portalgunforge.entities.PortalContext;
 import com.namarino41.portalgunforge.util.PortalGunSounds;
-import com.namarino41.portalgunforge.util.PortalUtil;
+import com.namarino41.portalgunforge.util.PortalManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -17,14 +16,13 @@ import net.minecraft.world.World;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PortalGunItem extends Item {
-    private PortalUtil portalUtil;
+    private final Map<PlayerEntity, PortalManager> playerEntityPortalManagerMap = new HashMap<>();
 
     private final int MAX_RANGE = 100;
-
-    private Portal portal1;
-    private Portal portal2;
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
@@ -33,16 +31,10 @@ public class PortalGunItem extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         if (!worldIn.isRemote) {
-            if (portalUtil == null) {
-                portalUtil = new PortalUtil(worldIn, playerIn);
-            }
-
-            if (portal1 != null && portal2 != null) {
-                portalUtil.deletePortal(portal1);
-                portalUtil.deletePortal(portal2);
-
-                portal1 = null;
-                portal2 = null;
+            PortalManager portalManager = playerEntityPortalManagerMap.get(playerIn);
+            if (portalManager == null) {
+                portalManager = new PortalManager(worldIn, playerIn);
+                playerEntityPortalManagerMap.put(playerIn, portalManager);
             }
 
             RayTraceContext rayTraceContext = new RayTraceContext(
@@ -53,43 +45,46 @@ public class PortalGunItem extends Item {
                     playerIn
             );
 
-            BlockRayTraceResult tmpBlockRayTraceResult = worldIn.rayTraceBlocks(rayTraceContext);
-            if (tmpBlockRayTraceResult.getType() != RayTraceResult.Type.BLOCK) {
+            BlockRayTraceResult blockRayTraceResult = worldIn.rayTraceBlocks(rayTraceContext);
+            if (blockRayTraceResult.getType() != RayTraceResult.Type.BLOCK) {
                 return ActionResult.resultFail(playerIn.getHeldItem(handIn));
             }
 
-            if (tmpBlockRayTraceResult.getPos().distanceSq(
-                    new Vector3i(playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ())) > 100) {
+            if (blockRayTraceResult.getPos().distanceSq(
+                    new Vector3i(playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ())) > MAX_RANGE) {
                 return ActionResult.resultFail(playerIn.getHeldItem(handIn));
             }
-
-            BlockRayTraceResult blockRayTraceResult = tmpBlockRayTraceResult;
 
             Direction lookingDirection = Arrays.stream(Direction.values())
-                    .filter(d -> d.getAxis() != tmpBlockRayTraceResult.getFace().getAxis())
+                    .filter(d -> d.getAxis() != blockRayTraceResult.getFace().getAxis())
                     .max(Comparator.comparingDouble(
                             dir -> playerIn.getLookVec().x * dir.getXOffset() +
                                    playerIn.getLookVec().y * dir.getYOffset() +
                                    playerIn.getLookVec().z * dir.getZOffset()))
                     .orElse(null);
 
-            if (!portalUtil.isValidPosition(worldIn, tmpBlockRayTraceResult, lookingDirection)) {
+            if (!portalManager.isValidPosition(worldIn, blockRayTraceResult, lookingDirection)) {
                 return ActionResult.resultFail(playerIn.getHeldItem(handIn));
+            }
+
+            if (portalManager.getPortal1() != null && portalManager.getPortal2() != null) {
+                portalManager.deletePortal1();
+                portalManager.deletePortal2();
             }
 
             PortalContext portalContext = new PortalContext(lookingDirection,
                                                             playerIn.getHorizontalFacing(),
                                                             blockRayTraceResult,
                                                             worldIn.func_234923_W_().func_240901_a_().getPath());
-            if (portal1 == null) {
-                portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_1_SHOOT_EVENT);
-                portal1 = portalUtil.makePortal(portalContext, PortalUtil.PORTAL_1_ID);
+            if (portalManager.getPortal1() == null) {
+                portalManager.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_1_SHOOT_EVENT);
+                portalManager.makePortal1(portalContext);
             } else {
-                portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_2_SHOOT_EVENT);
-                portal2 = portalUtil.makePortal(portalContext, PortalUtil.PORTAL_2_ID);
-                portalUtil.linkPortals(portal1, portal2);
-                portalUtil.adjustPortalRotation(portal1, portal2);
-                portalUtil.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_OPEN_EVENT);
+                portalManager.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_2_SHOOT_EVENT);
+                portalManager.makePortal2(portalContext);
+                portalManager.linkPortals();
+                portalManager.adjustPortalRotation();
+                portalManager.playSound(worldIn, playerIn, PortalGunSounds.PORTAL_OPEN_EVENT);
             }
         }
 

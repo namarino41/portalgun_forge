@@ -2,7 +2,6 @@ package com.namarino41.portalgunforge.entities;
 
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.DimensionType;
 
 public class PortalContext {
     private final Direction playerFacing;

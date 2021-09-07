@@ -1,7 +1,6 @@
 package com.namarino41.portalgunforge.util;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.namarino41.portalgunforge.entities.Portal;
 import com.namarino41.portalgunforge.entities.PortalContext;
 import net.minecraft.block.BlockState;
@@ -10,33 +9,30 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector2f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Set;
-
-public class PortalUtil {
+public class PortalManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final PortalCommands portalCommands;
 
-    private final ImmutableList<Direction> HORIZONTAL_DIRECTIONS =
+    private static final ImmutableList<Direction> HORIZONTAL_DIRECTIONS =
             ImmutableList.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
-    private final ImmutableList<Direction> VERTICAL_DIRECTIONS =
+    private static final ImmutableList<Direction> VERTICAL_DIRECTIONS =
             ImmutableList.of(Direction.UP, Direction.DOWN);
-
 
     public static String PORTAL_1_ID;
     public static String PORTAL_2_ID;
 
-    public PortalUtil(World worldIn, Entity playerIn) {
+    private Portal portal1;
+    private Portal portal2;
+
+    public PortalManager(World worldIn, Entity playerIn) {
         this.portalCommands = new PortalCommands(
                 worldIn.getServer().getCommandSource()
                                    .withPermissionLevel(2)
@@ -48,7 +44,23 @@ public class PortalUtil {
         PORTAL_2_ID = "portal_2_" + playerIn.getUniqueID();
     }
 
-    public Portal makePortal(PortalContext portalContext, String tag) {
+    public Portal getPortal1() {
+        return portal1;
+    }
+
+    public Portal getPortal2() {
+        return portal2;
+    }
+
+    public void makePortal1(PortalContext portalContext) {
+        portal1 = makePortal(portalContext, PORTAL_1_ID);
+    }
+
+    public void makePortal2(PortalContext portalContext) {
+        portal2 = makePortal(portalContext, PORTAL_2_ID);
+    }
+
+    private Portal makePortal(PortalContext portalContext, String tag) {
         Vector3d adjustedPosition = getPortalPosFromRayTrace(portalContext);
         Portal portal = new Portal(tag, adjustedPosition, portalContext);
 
@@ -63,14 +75,6 @@ public class PortalUtil {
         return portal;
     }
 
-    public void linkPortals(Portal portal1, Portal portal2) {
-        portalCommands.linkPortalToPortal(portal1, portal2);
-        portalCommands.linkPortalToPortal(portal2, portal1);
-
-        portalCommands.changePortalTeleportable(portal1, true);
-        portalCommands.changePortalTeleportable(portal2, true);
-    }
-
     private void positionPortal(Portal portal) {
         Direction portal2BlockFace = portal.getBlockFace();
         Direction portal2PlayerFacing = portal.getPlayerFacing();
@@ -80,7 +84,15 @@ public class PortalUtil {
         portalCommands.rotatePortalBody(portal, portalAdjustments);
     }
 
-    public void adjustPortalRotation(Portal portal1, Portal portal2) {
+    public void linkPortals() {
+        portalCommands.linkPortalToPortal(portal1, portal2);
+        portalCommands.linkPortalToPortal(portal2, portal1);
+
+        portalCommands.changePortalTeleportable(portal1, true);
+        portalCommands.changePortalTeleportable(portal2, true);
+    }
+
+    public void adjustPortalRotation() {
         Direction portal1PortalFacing = portal1.getBlockFace();
         Direction portal2PortalFacing = portal2.getBlockFace();
 
@@ -260,14 +272,19 @@ public class PortalUtil {
                 1F);
     }
 
-    public void deletePortal(Portal portal) {
-        portalCommands.deletePortal(portal);
+    public void deletePortal1() {
+        portalCommands.deletePortal(portal1);
+        portal1 = null;
+    }
+
+    public void deletePortal2() {
+        portalCommands.deletePortal(portal2);
+        portal2 = null;
     }
 
     public boolean isValidPosition(World worldIn,
                                    BlockRayTraceResult blockRayTraceResult,
                                    Direction lookingDirection) {
-
         BlockState mainBlock = worldIn.getBlockState(blockRayTraceResult.getPos());
         BlockState adjacentBlock;
 
