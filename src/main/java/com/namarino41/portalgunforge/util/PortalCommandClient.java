@@ -6,7 +6,7 @@ import net.minecraft.command.Commands;
 import net.minecraft.util.math.vector.Vector3d;
 
 
-public class PortalCommands {
+public class PortalCommandClient {
     private final CommandSource commandSource;
     private final Commands commandManager;
 
@@ -30,7 +30,7 @@ public class PortalCommands {
     private static final String ROTATE_PORTAL_ROTATION = "execute as @e[type=immersive_portals:portal,name=\"%s\"] " +
             "run portal rotate_portal_rotation_along %s %d";
 
-    public PortalCommands(CommandSource commandSource, Commands commandManager) {
+    public PortalCommandClient(CommandSource commandSource, Commands commandManager) {
         this.commandSource = commandSource;
         this.commandManager = commandManager;
     }

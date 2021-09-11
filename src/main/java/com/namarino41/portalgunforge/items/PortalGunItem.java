@@ -1,9 +1,11 @@
 package com.namarino41.portalgunforge.items;
 
+import com.namarino41.portalgunforge.PortalGunForge;
 import com.namarino41.portalgunforge.entities.PortalContext;
 import com.namarino41.portalgunforge.util.PortalGunSounds;
 import com.namarino41.portalgunforge.util.PortalManager;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -13,6 +15,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -26,24 +31,21 @@ public class PortalGunItem extends Item {
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
+        MinecraftForge.EVENT_BUS.register(this);
+
     }
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         if (!worldIn.isRemote) {
             PortalManager portalManager = playerEntityPortalManagerMap.get(playerIn);
-            if (portalManager == null) {
-                portalManager = new PortalManager(worldIn, playerIn);
-                playerEntityPortalManagerMap.put(playerIn, portalManager);
-            }
 
             RayTraceContext rayTraceContext = new RayTraceContext(
                     playerIn.getEyePosition(1.0f),
                     playerIn.getEyePosition(1.0f).add(playerIn.getLookVec().scale(100.0)),
                     RayTraceContext.BlockMode.OUTLINE,
                     RayTraceContext.FluidMode.NONE,
-                    playerIn
-            );
+                    playerIn);
 
             BlockRayTraceResult blockRayTraceResult = worldIn.rayTraceBlocks(rayTraceContext);
             if (blockRayTraceResult.getType() != RayTraceResult.Type.BLOCK) {
@@ -89,5 +91,27 @@ public class PortalGunItem extends Item {
         }
 
         return super.onItemRightClick(worldIn, playerIn, handIn);
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoginEvent(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getPlayer() instanceof ServerPlayerEntity) {
+            PlayerEntity playerEntity = event.getPlayer();
+            playerEntityPortalManagerMap.put(playerEntity, new PortalManager(playerEntity));
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLogoutEvent(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getPlayer() instanceof ServerPlayerEntity) {
+            PlayerEntity playerEntity = event.getPlayer();
+            PortalManager portalManager = playerEntityPortalManagerMap.remove(playerEntity);
+            if (portalManager.getPortal1() == null) {
+                portalManager.deletePortal1();
+            }
+            if (portalManager.getPortal2() == null) {
+                portalManager.deletePortal2();
+            }
+        }
     }
 }

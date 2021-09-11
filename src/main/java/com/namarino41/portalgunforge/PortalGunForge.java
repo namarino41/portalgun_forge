@@ -17,5 +17,6 @@ public class PortalGunForge {
         IEventBus MOD_BUS = FMLJavaModLoadingContext.get().getModEventBus();
         PortalGunItems.ITEMS.register(MOD_BUS);
         PortalGunSounds.SOUNDS.register(MOD_BUS);
+
     }
 }

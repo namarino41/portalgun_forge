@@ -14,6 +14,12 @@ public class Portal {
         this.portalContext = portalContext;
     }
 
+    public Portal(String id) {
+        this.id = id;
+        this.position = null;
+        this.portalContext = null;
+    }
+
     public String getId() {
         return id;
     }

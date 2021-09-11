@@ -19,25 +19,27 @@ import org.apache.logging.log4j.Logger;
 public class PortalManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final PortalCommands portalCommands;
+    private final PortalCommandClient portalCommandClient;
 
     private static final ImmutableList<Direction> HORIZONTAL_DIRECTIONS =
             ImmutableList.of(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     private static final ImmutableList<Direction> VERTICAL_DIRECTIONS =
             ImmutableList.of(Direction.UP, Direction.DOWN);
 
-    public static String PORTAL_1_ID;
-    public static String PORTAL_2_ID;
+    private final String PORTAL_1_ID;
+    private final String PORTAL_2_ID;
 
     private Portal portal1;
     private Portal portal2;
 
-    public PortalManager(World worldIn, Entity playerIn) {
-        this.portalCommands = new PortalCommands(
+    public PortalManager(Entity playerIn) {
+        World worldIn = playerIn.getEntityWorld();
+
+        this.portalCommandClient = new PortalCommandClient(
                 worldIn.getServer().getCommandSource()
-                                   .withPermissionLevel(2)
-                                   .withEntity(playerIn)
-                                   .withFeedbackDisabled(),
+                        .withPermissionLevel(2)
+                        .withEntity(playerIn)
+                        .withFeedbackDisabled(),
                 worldIn.getServer().getCommandManager());
 
         PORTAL_1_ID = "portal_1_" + playerIn.getUniqueID();
@@ -64,11 +66,11 @@ public class PortalManager {
         Vector3d adjustedPosition = getPortalPosFromRayTrace(portalContext);
         Portal portal = new Portal(tag, adjustedPosition, portalContext);
 
-        portalCommands.makePortal(portalContext.getDimension());
-        portalCommands.tagPortal(adjustedPosition, tag);
-        portalCommands.makePortalRound(portal);
-        portalCommands.changePortalTeleportable(portal, false);
-        portalCommands.adjustPositionAfterTeleport(portal);
+        portalCommandClient.makePortal(portalContext.getDimension());
+        portalCommandClient.tagPortal(adjustedPosition, tag);
+        portalCommandClient.makePortalRound(portal);
+        portalCommandClient.changePortalTeleportable(portal, false);
+        portalCommandClient.adjustPositionAfterTeleport(portal);
 
         positionPortal(portal);
 
@@ -80,16 +82,16 @@ public class PortalManager {
         Direction portal2PlayerFacing = portal.getPlayerFacing();
         PortalAdjustments portalAdjustments = PortalAdjustments.valueOf(portal2BlockFace, portal2PlayerFacing);
 
-        portalCommands.movePortal(portal, portalAdjustments);
-        portalCommands.rotatePortalBody(portal, portalAdjustments);
+        portalCommandClient.movePortal(portal, portalAdjustments);
+        portalCommandClient.rotatePortalBody(portal, portalAdjustments);
     }
 
     public void linkPortals() {
-        portalCommands.linkPortalToPortal(portal1, portal2);
-        portalCommands.linkPortalToPortal(portal2, portal1);
+        portalCommandClient.linkPortalToPortal(portal1, portal2);
+        portalCommandClient.linkPortalToPortal(portal2, portal1);
 
-        portalCommands.changePortalTeleportable(portal1, true);
-        portalCommands.changePortalTeleportable(portal2, true);
+        portalCommandClient.changePortalTeleportable(portal1, true);
+        portalCommandClient.changePortalTeleportable(portal2, true);
     }
 
     public void adjustPortalRotation() {
@@ -100,15 +102,15 @@ public class PortalManager {
         Direction portal2PlayerFacing = portal2.getHorizontalPlayerFacing();
 
         if (portal1.isVertical() && portal2.isVertical()) {
-            portalCommands.rotatePortalRotation(portal1, "y", getRotation(portal1PortalFacing, portal2PortalFacing));
-            portalCommands.rotatePortalRotation(portal2, "y", getRotation(portal2PortalFacing, portal1PortalFacing));
+            portalCommandClient.rotatePortalRotation(portal1, "y", getRotation(portal1PortalFacing, portal2PortalFacing));
+            portalCommandClient.rotatePortalRotation(portal2, "y", getRotation(portal2PortalFacing, portal1PortalFacing));
         } else if (portal1.isVertical() && !portal2.isVertical()) {
             // Orient the vertical portal
-            portalCommands.rotatePortalRotation(portal1,
+            portalCommandClient.rotatePortalRotation(portal1,
                                                 portal1PortalFacing == Direction.NORTH ||
                                                         portal1PortalFacing == Direction.SOUTH ? "x" : "z",
                                                 getRotation(portal1PortalFacing, portal2PortalFacing));
-            portalCommands.rotatePortalRotation(portal1,
+            portalCommandClient.rotatePortalRotation(portal1,
                                                 portal1PortalFacing == Direction.NORTH ||
                                                         portal1PortalFacing == Direction.SOUTH ? "z" : "x",
                                                 portal1PlayerFacing == Direction.NORTH ||
@@ -132,15 +134,15 @@ public class PortalManager {
                 }
             }
 
-            portalCommands.rotatePortalRotation(portal2, axis, getRotation(portal2PortalFacing, portal1PortalFacing));
-            portalCommands.rotatePortalRotation(portal2, "y", getRotation(portal2PlayerFacing, portal1PlayerFacing));
+            portalCommandClient.rotatePortalRotation(portal2, axis, getRotation(portal2PortalFacing, portal1PortalFacing));
+            portalCommandClient.rotatePortalRotation(portal2, "y", getRotation(portal2PlayerFacing, portal1PlayerFacing));
         } else if (!portal1.isVertical() && portal2.isVertical()) {
             // Orient the vertical portal
-            portalCommands.rotatePortalRotation(portal2,
+            portalCommandClient.rotatePortalRotation(portal2,
                     portal2PortalFacing == Direction.NORTH ||
                             portal2PortalFacing == Direction.SOUTH ? "x" : "z",
                     getRotation(portal2PortalFacing, portal1PortalFacing));
-            portalCommands.rotatePortalRotation(portal2,
+            portalCommandClient.rotatePortalRotation(portal2,
                                                 portal2PortalFacing == Direction.NORTH ||
                                                         portal2PortalFacing == Direction.SOUTH ? "z" : "x",
                                                 portal2PlayerFacing == Direction.NORTH ||
@@ -164,14 +166,14 @@ public class PortalManager {
                 }
             }
 
-            portalCommands.rotatePortalRotation(portal1, axis, getRotation(portal1PortalFacing, portal2PortalFacing));
-            portalCommands.rotatePortalRotation(portal1, "y", getRotation(portal1PlayerFacing, portal2PlayerFacing));
+            portalCommandClient.rotatePortalRotation(portal1, axis, getRotation(portal1PortalFacing, portal2PortalFacing));
+            portalCommandClient.rotatePortalRotation(portal1, "y", getRotation(portal1PlayerFacing, portal2PlayerFacing));
         } else if (!portal1.isVertical() && !portal2.isVertical()) {
-            portalCommands.rotatePortalRotation(portal1,
+            portalCommandClient.rotatePortalRotation(portal1,
                                                 portal1PlayerFacing == Direction.NORTH ||
                                                     portal1PlayerFacing == Direction.SOUTH ? "z" : "x",
                                                 getRotation(portal1PortalFacing, portal2PortalFacing));
-            portalCommands.rotatePortalRotation(portal2,
+            portalCommandClient.rotatePortalRotation(portal2,
                                                 portal2PlayerFacing == Direction.NORTH ||
                                                         portal2PlayerFacing == Direction.SOUTH ? "z" : "x",
                                                 getRotation(portal2PortalFacing, portal1PortalFacing));
@@ -180,14 +182,14 @@ public class PortalManager {
                     (portal1PlayerFacing == Direction.SOUTH && portal2PlayerFacing == Direction.NORTH)) ||
                         ((portal1PlayerFacing == Direction.EAST && portal2PlayerFacing == Direction.WEST) ||
                                 (portal1PlayerFacing == Direction.WEST && portal2PlayerFacing == Direction.EAST))) {
-                portalCommands.rotatePortalRotation(portal1, "y", 180);
-                portalCommands.rotatePortalRotation(portal2, "y", 180);
+                portalCommandClient.rotatePortalRotation(portal1, "y", 180);
+                portalCommandClient.rotatePortalRotation(portal2, "y", 180);
             } else if (portal1PlayerFacing == portal2PlayerFacing) {
-                portalCommands.rotatePortalRotation(portal1, "y", 0);
-                portalCommands.rotatePortalRotation(portal2, "y", 0);
+                portalCommandClient.rotatePortalRotation(portal1, "y", 0);
+                portalCommandClient.rotatePortalRotation(portal2, "y", 0);
             } else {
-                portalCommands.rotatePortalRotation(portal1, "y", getRotation(portal1PlayerFacing, portal2PlayerFacing));
-                portalCommands.rotatePortalRotation(portal2, "y", getRotation(portal2PlayerFacing, portal1PlayerFacing));
+                portalCommandClient.rotatePortalRotation(portal1, "y", getRotation(portal1PlayerFacing, portal2PlayerFacing));
+                portalCommandClient.rotatePortalRotation(portal2, "y", getRotation(portal2PlayerFacing, portal1PlayerFacing));
             }
         }
     }
@@ -273,12 +275,12 @@ public class PortalManager {
     }
 
     public void deletePortal1() {
-        portalCommands.deletePortal(portal1);
+        portalCommandClient.deletePortal(portal1);
         portal1 = null;
     }
 
     public void deletePortal2() {
-        portalCommands.deletePortal(portal2);
+        portalCommandClient.deletePortal(portal2);
         portal2 = null;
     }
 
