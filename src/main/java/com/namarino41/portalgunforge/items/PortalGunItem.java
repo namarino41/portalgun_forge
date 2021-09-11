@@ -106,10 +106,10 @@ public class PortalGunItem extends Item {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             PlayerEntity playerEntity = event.getPlayer();
             PortalManager portalManager = playerEntityPortalManagerMap.remove(playerEntity);
-            if (portalManager.getPortal1() == null) {
+            if (portalManager.getPortal1() != null) {
                 portalManager.deletePortal1();
             }
-            if (portalManager.getPortal2() == null) {
+            if (portalManager.getPortal2() != null) {
                 portalManager.deletePortal2();
             }
         }
