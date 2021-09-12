@@ -1,6 +1,5 @@
 package com.namarino41.portalgunforge.items;
 
-import com.namarino41.portalgunforge.PortalGunForge;
 import com.namarino41.portalgunforge.entities.PortalContext;
 import com.namarino41.portalgunforge.util.PortalGunSounds;
 import com.namarino41.portalgunforge.util.PortalManager;
@@ -31,8 +30,7 @@ public class PortalGunItem extends Item {
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
-        MinecraftForge.EVENT_BUS.register(this);
-
+        MinecraftForge.EVENT_BUS.register(new LoginLogoutHandler());
     }
 
     @Override
@@ -93,24 +91,26 @@ public class PortalGunItem extends Item {
         return super.onItemRightClick(worldIn, playerIn, handIn);
     }
 
-    @SubscribeEvent
-    public void onPlayerLoginEvent(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getPlayer() instanceof ServerPlayerEntity) {
-            PlayerEntity playerEntity = event.getPlayer();
-            playerEntityPortalManagerMap.put(playerEntity, new PortalManager(playerEntity));
-        }
-    }
-
-    @SubscribeEvent
-    public void onPlayerLogoutEvent(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getPlayer() instanceof ServerPlayerEntity) {
-            PlayerEntity playerEntity = event.getPlayer();
-            PortalManager portalManager = playerEntityPortalManagerMap.remove(playerEntity);
-            if (portalManager.getPortal1() != null) {
-                portalManager.deletePortal1();
+    class LoginLogoutHandler {
+        @SubscribeEvent
+        public void onPlayerLoginEvent(PlayerEvent.PlayerLoggedInEvent event) {
+            if (event.getPlayer() instanceof ServerPlayerEntity) {
+                PlayerEntity playerEntity = event.getPlayer();
+                playerEntityPortalManagerMap.put(playerEntity, new PortalManager(playerEntity));
             }
-            if (portalManager.getPortal2() != null) {
-                portalManager.deletePortal2();
+        }
+
+        @SubscribeEvent
+        public void onPlayerLogoutEvent(PlayerEvent.PlayerLoggedOutEvent event) {
+            if (event.getPlayer() instanceof ServerPlayerEntity) {
+                PlayerEntity playerEntity = event.getPlayer();
+                PortalManager portalManager = playerEntityPortalManagerMap.remove(playerEntity);
+                if (portalManager.getPortal1() != null) {
+                    portalManager.deletePortal1();
+                }
+                if (portalManager.getPortal2() != null) {
+                    portalManager.deletePortal2();
+                }
             }
         }
     }
