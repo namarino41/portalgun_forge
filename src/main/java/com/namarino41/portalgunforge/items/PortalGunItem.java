@@ -26,7 +26,7 @@ import java.util.Map;
 public class PortalGunItem extends Item {
     private final Map<PlayerEntity, PortalManager> playerEntityPortalManagerMap = new HashMap<>();
 
-    private final int MAX_RANGE = 100;
+    private final int MAX_RANGE = 500;
 
     public PortalGunItem() {
         super(new Item.Properties().group(ItemGroup.TOOLS));
@@ -50,8 +50,8 @@ public class PortalGunItem extends Item {
                 return ActionResult.resultFail(playerIn.getHeldItem(handIn));
             }
 
-            if (blockRayTraceResult.getPos().distanceSq(
-                    new Vector3i(playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ())) > MAX_RANGE) {
+            if (!blockRayTraceResult.getPos().withinDistance(new Vector3i(
+                    playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ()), MAX_RANGE)) {
                 return ActionResult.resultFail(playerIn.getHeldItem(handIn));
             }
 
